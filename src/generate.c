@@ -40,8 +40,6 @@
 #include "sha256.h"
 #include "hmac.h"
 
-#define VERIFICATION_CODE_MODULUS (1000*1000) // Six digits
-
 int generateCode(uint8_t *secret, uint8_t secret_length, unsigned long tm) {
   uint8_t challenge[8];
   for (int i = 8; i--; tm >>= 8) {
@@ -73,7 +71,6 @@ int generateCode(uint8_t *secret, uint8_t secret_length, unsigned long tm) {
 
   // Truncate to a smaller number of digits.
   truncatedHash &= 0x7FFFFFFF;
-  truncatedHash %= VERIFICATION_CODE_MODULUS;
 
   return truncatedHash;
 }

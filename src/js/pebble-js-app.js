@@ -71,7 +71,7 @@ var OpenConfiguration = function(){
     // You used to be able to defer opening the config page till the tokens were loaded.
     // You can't any more...
     if (TokenLoadFinished) {
-        Pebble.openURL("https://pebbleauth.cpfx.ca/config.html?ver=1.1.0#" + encodeURIComponent(JSON.stringify(Tokens)));
+        Pebble.openURL("https://pebbleauth.cpfx.ca/config.html?ver=1.12#" + encodeURIComponent(JSON.stringify(Tokens)));
     } else {
         Pebble.openURL("https://pebbleauth.cpfx.ca/relaunch.html");
     }
@@ -117,7 +117,7 @@ var ReconcileConfiguration = function(newTokens) {
         token = to_create[idx];
 		var secretArray = ToByteArray(atob(token.Secret));
 		secretArray.unshift(secretArray.length);
-        QueueAppMessage({"AMCreateToken": secretArray, "AMCreateToken_ID": token.ID, "AMCreateToken_Name": token.Name});
+        QueueAppMessage({"AMCreateToken": secretArray, "AMCreateToken_ID": token.ID, "AMCreateToken_Name": token.Name, "AMCreateToken_Digits": token.Digits});
     }
     for (idx in to_update) {
         token = to_update[idx];

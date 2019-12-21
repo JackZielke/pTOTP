@@ -4,6 +4,7 @@
         "AMCreateToken": 1,
         "AMCreateToken_ID": 2,
         "AMCreateToken_Name": 3,
+        "AMCreateToken_Digits": 11,
         "AMDeleteToken": 4,
         "AMReadTokenList": 6,
         "AMReadTokenList_Finished": 8,
@@ -36,8 +37,8 @@
         "chalk"
     ],
     "uuid": "da96ea4e-7793-4301-9d9a-68714a902730",
-    "versionCode": 11,
-    "versionLabel": "1.11",
+    "versionCode": 12,
+    "versionLabel": "1.12",
     "watchapp": {
         "watchface": false
     }

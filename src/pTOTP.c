@@ -57,7 +57,10 @@ typedef enum AMKey {
 
   AMUpdateToken = 9, // Struct with token info
 
-  AMSetTokenListOrder = 10 // array of shorts of token IDs
+  AMSetTokenListOrder = 10, // array of shorts of token IDs
+
+  AMCreateToken_Digits = 11, // Short with length of code (provided by phone)
+
 } AMKey;
 
 typedef struct TokenInfo {
@@ -65,7 +68,8 @@ typedef struct TokenInfo {
   short id;
   uint8_t secret_length; // Since persistence is limited to this size anyways.
   uint8_t* secret;
-  char code[7];
+  char code[11];
+  short digits;
 } TokenInfo;
 
 typedef struct PublicTokenInfo {
@@ -198,10 +202,9 @@ void publicinfo2tokeninfo(PublicTokenInfo* public, TokenInfo* key) {
   key->name[MAX_NAME_LENGTH] = 0;
 }
 
-void code2char(unsigned int code, char* out) {
-  out[6] = 0;
-  for(int x=0; x<6; x++) {
-    out[5-x] = '0' + (code % 10);
+void code2char(unsigned int code, char* out, int length) {
+  for(int x=0; x<length; x++) {
+    out[length-1-x] = '0' + (code % 10);
     code /= 10;
   }
 }
@@ -235,7 +238,7 @@ void refresh_all(void){
   TokenListNode* keyNode = token_list;
   while (keyNode) {
     unsigned int code = generateCode(keyNode->key->secret, keyNode->key->secret_length, quantized_time);
-    code2char(code, (char*)&keyNode->key->code);
+    code2char(code, (char*)&keyNode->key->code, keyNode->key->digits);
     keyNode = keyNode->next;
     hasKeys = true;
   }
@@ -291,6 +294,7 @@ void draw_code_row(GContext *ctx, const Layer *cell_layer, MenuIndex *cell_index
   GRect bounds = layer_get_bounds(cell_layer);
   GColor fg = GColorBlack;
   GColor active_fg = GColorWhite;
+  GFont code_font = fonts_get_system_font(FONT_KEY_BITHAM_34_MEDIUM_NUMBERS);
   #ifdef PBL_COLOR
   GColor active_bg = GColorCobaltBlue;
   #else
@@ -307,7 +311,13 @@ void draw_code_row(GContext *ctx, const Layer *cell_layer, MenuIndex *cell_index
 
   TokenInfo* key = token_by_list_index(cell_index->row);
   graphics_draw_text(ctx, (char*)key->name, fonts_get_system_font(FONT_KEY_GOTHIC_14), GRect(0, 36, bounds.size.w, 20), GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
-  graphics_draw_text(ctx, (char*)key->code, fonts_get_system_font(FONT_KEY_BITHAM_34_MEDIUM_NUMBERS), GRect(0, 0, bounds.size.w, 100), GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
+  if (key->digits > 8) {
+    code_font = fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD);
+  } else if (key->digits > 6) {
+    code_font = fonts_get_system_font(FONT_KEY_DROID_SERIF_28_BOLD);
+  }
+  graphics_draw_text(ctx, (char*)key->code, code_font, GRect(0, 0, bounds.size.w, 100), GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
+
 }
 
 uint16_t num_code_rows(struct MenuLayer *menu_layer, uint16_t section_index, void *callback_context){
@@ -421,6 +431,7 @@ void in_received_handler(DictionaryIterator *received, void *context) {
     newKey->id = dict_find(received, AMCreateToken_ID)->value->int32;
     strncpy((char*)&newKey->name, dict_find(received, AMCreateToken_Name)->value->cstring, MAX_NAME_LENGTH);
     newKey->name[MAX_NAME_LENGTH] = 0;
+    newKey->digits = dict_find(received, AMCreateToken_Digits)->value->int32;
 
     token_list_add(newKey);
     APP_LOG(APP_LOG_LEVEL_DEBUG, "Create token %d", newKey->id);
@@ -528,6 +539,7 @@ void handle_init() {
   memset(secret, 65, 10);
   key->secret = secret;
   key->secret_length = 10;
+  key->digits = 6;
   token_list_add(key);
   
   key = malloc(sizeof(TokenInfo));
@@ -537,6 +549,7 @@ void handle_init() {
   memset(secret, 66, 10);
   key->secret = secret;
   key->secret_length = 10;
+  key->digits = 8;
   token_list_add(key);
 #endif
 

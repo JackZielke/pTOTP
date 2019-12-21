@@ -132,11 +132,15 @@ var TokenCreated = function(e){
     var token = {
         "ID": NextTokenID(),
         "Name": $("#new-token-name").val(),
-        "Secret": base64_secret
+        "Secret": base64_secret,
+        "Digits": parseInt($("#new-token-digits").val())
     };
     if (!token.Name || !token.Secret) {
         alert("You must enter a name and key for the new token");
         return;
+    }
+    if (isNaN(token.Digits) || token.Digits < 1 || token.Digits > 10) {
+        token.Digits = 6;
     }
     Tokens.push(token);
     SetPendingWatchUpdate();
