@@ -68,7 +68,7 @@ typedef struct TokenInfo {
   short id;
   uint8_t secret_length; // Since persistence is limited to this size anyways.
   uint8_t* secret;
-  char code[11];
+  char code[12];
   short digits;
 } TokenInfo;
 
@@ -203,8 +203,21 @@ void publicinfo2tokeninfo(PublicTokenInfo* public, TokenInfo* key) {
 }
 
 void code2char(unsigned int code, char* out, int length) {
+  out[length] = 0;
   for(int x=0; x<length; x++) {
     out[length-1-x] = '0' + (code % 10);
+    code /= 10;
+  }
+}
+
+void code2charspace(unsigned int code, char* out, int length) {
+  out[length+1] = 0;
+  for(int x=0; x<=length; x++) {
+    if (x == length/2) {
+      out[length-x] = ' ';
+      x++;
+    }
+    out[length-x] = '0' + (code % 10);
     code /= 10;
   }
 }
@@ -238,7 +251,11 @@ void refresh_all(void){
   TokenListNode* keyNode = token_list;
   while (keyNode) {
     unsigned int code = generateCode(keyNode->key->secret, keyNode->key->secret_length, quantized_time);
-    code2char(code, (char*)&keyNode->key->code, keyNode->key->digits);
+    if (keyNode->key->digits > 6) {
+      code2charspace(code, (char*)&keyNode->key->code, keyNode->key->digits);
+    } else {
+      code2char(code, (char*)&keyNode->key->code, keyNode->key->digits);
+    }
     keyNode = keyNode->next;
     hasKeys = true;
   }
